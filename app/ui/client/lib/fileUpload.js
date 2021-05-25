@@ -185,12 +185,21 @@ const getGenericUploadPreview = (file) => `\
 </div>`;
 
 const getUploadPreview = async (file, preview) => {
+	// Mobile Safari crashes when input fields have autofocus
+	const applySafariHack = (html) => {
+		if (navigator.userAgent.match(/(iPad|iPhone|iPod)/g)) {
+			return html.replace(/\bautofocus\b/g, '');
+		}
+
+		return html;
+	};
+
 	if (file.type === 'audio') {
-		return getAudioUploadPreview(file, preview);
+		return applySafariHack(getAudioUploadPreview(file, preview));
 	}
 
 	if (file.type === 'video') {
-		return getVideoUploadPreview(file, preview);
+		return applySafariHack(getVideoUploadPreview(file, preview));
 	}
 
 	const isImageFormatSupported = () => new Promise((resolve) => {
@@ -201,11 +210,12 @@ const getUploadPreview = async (file, preview) => {
 	});
 
 	if (file.type === 'image' && await isImageFormatSupported()) {
-		return getImageUploadPreview(file, preview);
+		return applySafariHack(getImageUploadPreview(file, preview));
 	}
 
-	return getGenericUploadPreview(file, preview);
+	return applySafariHack(getGenericUploadPreview(file, preview));
 };
+
 
 export const fileUpload = async (files, input, { rid, tmid }) => {
 	const threadsEnabled = settings.get('Threads_enabled');
